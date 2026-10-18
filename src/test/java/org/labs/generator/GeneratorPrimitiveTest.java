@@ -24,8 +24,8 @@ class GeneratorPrimitiveTest {
             RandomGenerator rnd = new StubRandom() {
                 @Override
                 public long nextLong(long origin, long bound) {
-                    assertEquals(min, origin);
-                    assertEquals(max + 1, bound);
+                    assertEquals(Math.max(min, Constants.MIN), origin);
+                    assertEquals(Math.min(max, Constants.MAX), bound - 1);
                     return expected;
                 }
             };
@@ -41,20 +41,20 @@ class GeneratorPrimitiveTest {
         return Stream.of(
             Arguments.of(byte.class, Byte.class, Byte.MIN_VALUE, Byte.MAX_VALUE),
             Arguments.of(Byte.class, Byte.class, Byte.MIN_VALUE, Byte.MAX_VALUE),
-            Arguments.of(short.class, Short.class, Generatable.DEFAULT_MIN, Generatable.DEFAULT_MAX),
-            Arguments.of(Short.class, Short.class, Generatable.DEFAULT_MIN, Generatable.DEFAULT_MAX),
-            Arguments.of(int.class, Integer.class, Generatable.DEFAULT_MIN, Generatable.DEFAULT_MAX),
-            Arguments.of(Integer.class, Integer.class, Generatable.DEFAULT_MIN, Generatable.DEFAULT_MAX),
-            Arguments.of(long.class, Long.class, Generatable.DEFAULT_MIN, Generatable.DEFAULT_MAX),
-            Arguments.of(Long.class, Long.class, Generatable.DEFAULT_MIN, Generatable.DEFAULT_MAX)
+            Arguments.of(short.class, Short.class, Short.MIN_VALUE, Short.MAX_VALUE),
+            Arguments.of(Short.class, Short.class, Short.MIN_VALUE, Short.MAX_VALUE),
+            Arguments.of(int.class, Integer.class, Integer.MIN_VALUE, Integer.MAX_VALUE),
+            Arguments.of(Integer.class, Integer.class, Integer.MIN_VALUE, Integer.MAX_VALUE),
+            Arguments.of(long.class, Long.class, Long.MIN_VALUE, Long.MAX_VALUE),
+            Arguments.of(Long.class, Long.class, Long.MIN_VALUE, Long.MAX_VALUE)
         );
     }
 
     @ParameterizedTest
     @ValueSource(classes = {float.class, Float.class})
     void generatesFloatsWithinConfiguredBounds(Class<?> type) throws Exception {
-        float min = Generatable.DEFAULT_MIN;
-        float bound = Generatable.DEFAULT_MAX + 1.0f;
+        float min = Constants.MIN;
+        float bound = Constants.MAX + 1.0f;
         for (float expected : new float[] {min, 0.0f, Math.nextDown(bound)}) {
             RandomGenerator rnd = new StubRandom() {
                 @Override
@@ -75,8 +75,8 @@ class GeneratorPrimitiveTest {
     @ParameterizedTest
     @ValueSource(classes = {double.class, Double.class})
     void generatesDoublesWithinConfiguredBounds(Class<?> type) throws Exception {
-        double min = Generatable.DEFAULT_MIN;
-        double bound = Generatable.DEFAULT_MAX + 1.0d;
+        double min = Constants.MIN;
+        double bound = Constants.MAX + 1.0d;
         for (double expected : new double[] {min, 0.0d, Math.nextDown(bound)}) {
             RandomGenerator rnd = new StubRandom() {
                 @Override

@@ -6,11 +6,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.PARAMETER, ElementType.CONSTRUCTOR})
+@Target({ElementType.TYPE_USE})
 public @interface Generatable {
-    public final static long DEFAULT_MIN = -10000;
-    public final static long DEFAULT_MAX = 10000;
-    
-    long min() default DEFAULT_MIN;
-    long max() default DEFAULT_MAX;
+    long min() default Constants.MIN;
+    long max() default Constants.MAX;
+    long min_length() default Constants.MIN_LENGTH;
+    long max_length() default Constants.DEFAULT_LENGTH_BOUND;
 }

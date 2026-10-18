@@ -37,9 +37,9 @@ public class Generator {
 
     public Object generateValueOfType(Class<?> clazz, RandomGenerator rnd) throws InstantiationException, IllegalAccessException, InvocationTargetException {
         if (clazz.isPrimitive() || WRAPPERS.contains(clazz)) {
-            return generatePrimitive(clazz, rnd);
+            return generatePrimitive(clazz, rnd, Constants.MIN, Constants.MAX);
         } else if (clazz == String.class) {
-            return generateString(clazz, rnd);
+            return generateString(clazz, rnd, Constants.MIN_LENGTH, Constants.DEFAULT_LENGTH_BOUND);
         } else if (clazz.isEnum()) {
             return generateEnum(clazz, rnd);
         } else if (clazz.isArray()) {
@@ -58,11 +58,11 @@ public class Generator {
         return null; // unreachable
     }
 
-    private Object generatePrimitive(Class<?> clazz, RandomGenerator rnd) {
-        var mm = Optional.ofNullable(clazz.getAnnotation(Generatable.class))
-            .map(a -> new MinMax(a.min(), a.max()))
-            .orElse(new MinMax(Generatable.DEFAULT_MIN, Generatable.DEFAULT_MAX));
-
+    private Object generatePrimitive(Class<?> clazz, RandomGenerator rnd, long min, long max) {
+        if (min > max) {
+            throw new IllegalArgumentException("min > max");
+        }
+        
         if (clazz == void.class || clazz == Void.class) {
             return null;
         }
@@ -72,8 +72,8 @@ public class Generator {
             if (typeBoundaries == null) {
                 break;
             }
-            long min = Math.min(typeBoundaries.max, Math.max(typeBoundaries.min, mm.min));
-            long max = Math.min(typeBoundaries.max, Math.max(typeBoundaries.min, mm.max));
+            min = Math.min(typeBoundaries.max, Math.max(typeBoundaries.min, min));
+            max = Math.min(typeBoundaries.max, Math.max(typeBoundaries.min, max));
             var generated = Long.valueOf(nextLongInclusive(min, max, rnd));
             if (clazz == long.class || clazz == Long.class) {
                 return generated;
@@ -87,10 +87,10 @@ public class Generator {
         } while(false);
         
         if (clazz == float.class || clazz == Float.class) {
-            return Float.valueOf(rnd.nextFloat((float) mm.min, (float) mm.max + 1.0f));
+            return Float.valueOf(rnd.nextFloat((float) min, (float) max + 1.0f));
         }
         if (clazz == double.class || clazz == Double.class) {
-            return Double.valueOf(rnd.nextDouble((double) mm.min, (double) mm.max + 1.0d));
+            return Double.valueOf(rnd.nextDouble((double) min, (double) max + 1.0d));
         }
 
         if (clazz == boolean.class || clazz == Boolean.class) {
@@ -104,11 +104,17 @@ public class Generator {
         throw new IllegalArgumentException("Class " + clazz + " is not primitive");
     }
 
-    private Object generateString(Class<?> clazz, RandomGenerator rnd) {
-        var length = Math.min(Math.max(rnd.nextExponential() * 10, 1), 100);
+    private Object generateString(Class<?> clazz, RandomGenerator rnd, int minLength, int maxLength) {
+        minLength = Math.max(minLength, Constants.MIN_LENGTH);
+        maxLength = Math.min(maxLength, Constants.MAX_LENGTH);
+        if (minLength > maxLength) {
+            throw new IllegalArgumentException("min > max for length");
+        }
+
+        var length = Math.min(Math.max(rnd.nextExponential() * 10, minLength), maxLength);
         var strBuilder = new StringBuilder();
         for (int i = 0; i < length; ++i) {
-            strBuilder.append(generatePrimitive(Character.class, rnd));
+            strBuilder.append(generatePrimitive(Character.class, rnd, Constants.MIN, Constants.MAX));
         }
 
         return new String(strBuilder);
