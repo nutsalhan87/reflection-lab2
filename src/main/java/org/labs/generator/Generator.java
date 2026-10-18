@@ -41,7 +41,7 @@ public class Generator {
         } else if (clazz == String.class) {
             return generateString(clazz, rnd);
         } else if (clazz.isEnum()) {
-
+            return generateEnum(clazz, rnd);
         } else if (clazz.isArray()) {
 
         } else if (List.class.isAssignableFrom(clazz)) {
@@ -55,11 +55,7 @@ public class Generator {
         } else {
             throw new IllegalArgumentException("Unsupported class " + clazz);
         }
-        Constructor<?>[] constructors = clazz.getDeclaredConstructors();
-
-        int randomConstructorIndex = rnd.nextInt(constructors.length);
-        Constructor<?> randomConstructor = constructors[randomConstructorIndex];
-        return randomConstructor.newInstance(111);
+        return null; // unreachable
     }
 
     private Object generatePrimitive(Class<?> clazz, RandomGenerator rnd) {
@@ -116,6 +112,14 @@ public class Generator {
         }
 
         return new String(strBuilder);
+    }
+
+    private Object generateEnum(Class<?> clazz, RandomGenerator rnd) {
+        var consts = clazz.getEnumConstants();
+        if (consts.length == 0) {
+            return null;
+        }
+        return consts[rnd.nextInt(consts.length)];
     }
 
     // Спасибо разрабам Java за то, что у RandomGenerator.nextLong(origin, bound) правая граница невключительная, так что можно попасть на переполнение с MAX_VALUE + 1
