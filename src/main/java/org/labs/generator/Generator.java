@@ -39,7 +39,7 @@ public class Generator {
         if (clazz.isPrimitive() || WRAPPERS.contains(clazz)) {
             return generatePrimitive(clazz, rnd);
         } else if (clazz == String.class) {
-
+            return generateString(clazz, rnd);
         } else if (clazz.isEnum()) {
 
         } else if (clazz.isArray()) {
@@ -106,6 +106,16 @@ public class Generator {
         }
         
         throw new IllegalArgumentException("Class " + clazz + " is not primitive");
+    }
+
+    private Object generateString(Class<?> clazz, RandomGenerator rnd) {
+        var length = Math.min(Math.max(rnd.nextExponential() * 10, 1), 100);
+        var strBuilder = new StringBuilder();
+        for (int i = 0; i < length; ++i) {
+            strBuilder.append(generatePrimitive(Character.class, rnd));
+        }
+
+        return new String(strBuilder);
     }
 
     // Спасибо разрабам Java за то, что у RandomGenerator.nextLong(origin, bound) правая граница невключительная, так что можно попасть на переполнение с MAX_VALUE + 1
