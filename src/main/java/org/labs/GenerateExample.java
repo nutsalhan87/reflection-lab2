@@ -1,8 +1,8 @@
-package org.example;
+package org.labs;
 
 
-import org.example.classes.Example;
-import org.example.generator.Generator;
+import org.labs.classes.Example;
+import org.labs.generator.Generator;
 
 public class GenerateExample {
     public static void main(String[] args) {

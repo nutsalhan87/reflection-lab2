@@ -1,4 +1,4 @@
-package org.example.classes;
+package org.labs.classes;
 
 public class Rectangle implements Shape {
     private double length;

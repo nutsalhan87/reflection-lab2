@@ -1,4 +1,4 @@
-package org.example.generator;
+package org.labs.generator;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;

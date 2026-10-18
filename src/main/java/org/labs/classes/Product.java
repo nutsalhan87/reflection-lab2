@@ -1,4 +1,4 @@
-package org.example.classes;
+package org.labs.classes;
 
 public class Product {
     private String name;

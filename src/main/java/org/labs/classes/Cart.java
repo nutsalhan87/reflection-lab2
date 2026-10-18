@@ -1,4 +1,4 @@
-package org.example.classes;
+package org.labs.classes;
 
 import java.util.List;
 
