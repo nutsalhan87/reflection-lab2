@@ -10,6 +10,6 @@ import java.lang.annotation.Target;
 public @interface Generatable {
     long min() default Constants.MIN;
     long max() default Constants.MAX;
-    long min_length() default Constants.MIN_LENGTH;
-    long max_length() default Constants.DEFAULT_LENGTH_BOUND;
+    int minLength() default Constants.MIN_LENGTH;
+    int maxLength() default Constants.DEFAULT_LENGTH_BOUND;
 }

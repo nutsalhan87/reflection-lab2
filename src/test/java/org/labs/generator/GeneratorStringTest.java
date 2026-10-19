@@ -18,15 +18,15 @@ class GeneratorStringTest {
         "0.0, 1",
         "0.05, 1",
         "0.1, 1",
-        "0.11, 2",
-        "1.0, 10",
-        "1.25, 13",
-        "9.9, 99",
-        "9.99, 100",
-        "10.0, 100",
+        "0.11, 1",
+        "1.0, 9",
+        "1.25, 12",
+        "9.9, 98",
+        "9.99, 98",
+        "10.0, 99",
         "100.0, 100"
     })
-    void generatesStringsWithClampedRoundedUpLengths(double exponential, int expectedLength) throws Exception {
+    void generatesStringsWithClampedLengths(double exponential, int expectedLength) throws Exception {
         var field = Generator.class.getDeclaredField("alphabet");
         field.setAccessible(true);
         String alphabet = (String) field.get(null);

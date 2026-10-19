@@ -1,8 +1,13 @@
 package org.labs.generator;
 
-import java.lang.reflect.Constructor;
+import java.lang.reflect.AnnotatedArrayType;
+import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.AnnotatedType;
+import java.lang.reflect.Array;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -31,36 +36,51 @@ public class Generator {
 
     private static final String alphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-    public Object generateValueOfType(Class<?> clazz) throws InstantiationException, IllegalAccessException, InvocationTargetException {
-        return generateValueOfType(clazz, new Random());
+    public Object generateValueOfType(AnnotatedElement element) throws InstantiationException, IllegalAccessException, InvocationTargetException {
+        return generateValueOfType(element, new Random());
     }
 
-    public Object generateValueOfType(Class<?> clazz, RandomGenerator rnd) throws InstantiationException, IllegalAccessException, InvocationTargetException {
+    public Object generateValueOfType(AnnotatedElement element, RandomGenerator rnd) throws InstantiationException, IllegalAccessException, InvocationTargetException {
+        return switch (element) {
+            case Class<?> clazz -> generate(clazz, null, rnd);
+            case Field field -> generate(field.getType(), field.getAnnotatedType(), rnd);
+            case Parameter parameter -> generate(parameter.getType(), parameter.getAnnotatedType(), rnd);
+            default -> throw new IllegalArgumentException(element.getClass() + " is not supported for generating random value");
+        };
+    }
+
+    private Object generate(Class<?> clazz, AnnotatedType annotatedType, RandomGenerator rnd) throws InstantiationException, IllegalAccessException, InvocationTargetException {
+        Generatable ann = Optional.ofNullable(annotatedType)
+            .map(a -> a.getAnnotation(Generatable.class))
+            .orElse(null);
+        
         if (clazz.isPrimitive() || WRAPPERS.contains(clazz)) {
-            return generatePrimitive(clazz, rnd, Constants.MIN, Constants.MAX);
+            return generatePrimitive(clazz, ann, rnd);
         } else if (clazz == String.class) {
-            return generateString(clazz, rnd, Constants.MIN_LENGTH, Constants.DEFAULT_LENGTH_BOUND);
+            return generateString(ann, rnd);
         } else if (clazz.isEnum()) {
             return generateEnum(clazz, rnd);
         } else if (clazz.isArray()) {
-
+            // TODO
         } else if (List.class.isAssignableFrom(clazz)) {
-
+            // TODO
         } else if (Map.class.isAssignableFrom(clazz)) {
-
+            // TODO
         } else if (clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers())) {
-
+            // TODO
         } else if (clazz.getDeclaredConstructors().length != 0) {
-            
+            // TODO            
         } else {
             throw new IllegalArgumentException("Unsupported class " + clazz);
         }
         return null; // unreachable
     }
 
-    private Object generatePrimitive(Class<?> clazz, RandomGenerator rnd, long min, long max) {
+    private Object generatePrimitive(Class<?> clazz, Generatable ann, RandomGenerator rnd) {
+        long min = ann != null ? ann.min() : Constants.MIN;
+        long max = ann != null ? ann.max() : Constants.MAX;
         if (min > max) {
-            throw new IllegalArgumentException("min > max");
+            throw new IllegalArgumentException("min > max for " + clazz);
         }
         
         if (clazz == void.class || clazz == Void.class) {
@@ -104,17 +124,17 @@ public class Generator {
         throw new IllegalArgumentException("Class " + clazz + " is not primitive");
     }
 
-    private Object generateString(Class<?> clazz, RandomGenerator rnd, int minLength, int maxLength) {
-        minLength = Math.max(minLength, Constants.MIN_LENGTH);
-        maxLength = Math.min(maxLength, Constants.MAX_LENGTH);
+    private Object generateString(Generatable ann, RandomGenerator rnd) {
+        int minLength = ann != null ? ann.minLength() : Constants.MIN_LENGTH;
+        int maxLength = ann != null ? ann.maxLength() : Constants.DEFAULT_LENGTH_BOUND;
         if (minLength > maxLength) {
-            throw new IllegalArgumentException("min > max for length");
+            throw new IllegalArgumentException("min > max for length for String with annotation " + (ann == null ? "Generatable=null" : ann));
         }
+        var length = (int) Math.min(Math.max(rnd.nextExponential() * (maxLength - minLength) * 0.1, minLength), maxLength);
 
-        var length = Math.min(Math.max(rnd.nextExponential() * 10, minLength), maxLength);
         var strBuilder = new StringBuilder();
         for (int i = 0; i < length; ++i) {
-            strBuilder.append(generatePrimitive(Character.class, rnd, Constants.MIN, Constants.MAX));
+            strBuilder.append(generatePrimitive(Character.class, null, rnd));
         }
 
         return new String(strBuilder);
