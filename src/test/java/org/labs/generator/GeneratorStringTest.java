@@ -19,11 +19,11 @@ class GeneratorStringTest {
         "0.05, 1",
         "0.1, 1",
         "0.11, 1",
-        "1.0, 9",
-        "1.25, 12",
-        "9.9, 98",
-        "9.99, 98",
-        "10.0, 99",
+        "1.0, 10",
+        "1.25, 13",
+        "9.9, 100",
+        "9.99, 100",
+        "10.0, 100",
         "100.0, 100"
     })
     void generatesStringsWithClampedLengths(double exponential, int expectedLength) throws Exception {

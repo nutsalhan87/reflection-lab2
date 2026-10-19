@@ -125,12 +125,12 @@ public class Generator {
     }
 
     private Object generateString(Generatable ann, RandomGenerator rnd) {
-        int minLength = ann != null ? ann.minLength() : Constants.MIN_LENGTH;
-        int maxLength = ann != null ? ann.maxLength() : Constants.DEFAULT_LENGTH_BOUND;
+        int minLength = ann != null ? Math.max(ann.minLength(), Constants.MIN_LENGTH) : Constants.MIN_LENGTH;
+        int maxLength = ann != null ? Math.min(ann.maxLength(), Constants.MAX_LENGTH) : Constants.DEFAULT_LENGTH_BOUND;
         if (minLength > maxLength) {
             throw new IllegalArgumentException("min > max for length for String with annotation " + (ann == null ? "Generatable=null" : ann));
         }
-        var length = (int) Math.min(Math.max(rnd.nextExponential() * (maxLength - minLength) * 0.1, minLength), maxLength);
+        var length = (int) Math.min(Math.max(rnd.nextExponential() * (minLength + ((double) maxLength - minLength) * 0.1), minLength), maxLength);
 
         var strBuilder = new StringBuilder();
         for (int i = 0; i < length; ++i) {
@@ -152,12 +152,12 @@ public class Generator {
         Generatable ann = Optional.ofNullable(annotated)
             .map(a -> a.getAnnotation(Generatable.class))
             .orElse(null);
-        int minLength = ann != null ? ann.minLength() : Constants.MIN_LENGTH;
-        int maxLength = ann != null ? ann.maxLength() : Constants.DEFAULT_LENGTH_BOUND;
+        int minLength = ann != null ? Math.max(ann.minLength(), Constants.MIN_LENGTH) : Constants.MIN_LENGTH;
+        int maxLength = ann != null ? Math.min(ann.maxLength(), Constants.MAX_LENGTH) : Constants.DEFAULT_LENGTH_BOUND;
         if (minLength > maxLength) {
             throw new IllegalArgumentException("min > max for length for " + clazz);
         }
-        var length = (int) Math.min(Math.max(rnd.nextExponential() * (maxLength - minLength) * 0.1, minLength), maxLength);
+        var length = (int) Math.min(Math.max(rnd.nextExponential() * (minLength + ((double) maxLength - minLength) * 0.1), minLength), maxLength);
 
         var componentClass = clazz.getComponentType();
         var componentType = annotated instanceof AnnotatedArrayType a ? a.getAnnotatedGenericComponentType() : null;
