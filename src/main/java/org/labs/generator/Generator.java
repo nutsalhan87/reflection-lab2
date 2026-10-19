@@ -61,7 +61,7 @@ public class Generator {
         } else if (clazz.isEnum()) {
             return generateEnum(clazz, rnd);
         } else if (clazz.isArray()) {
-            // TODO
+            return generateArray(clazz, annotatedType, rnd);
         } else if (List.class.isAssignableFrom(clazz)) {
             // TODO
         } else if (Map.class.isAssignableFrom(clazz)) {
@@ -146,6 +146,27 @@ public class Generator {
             return null;
         }
         return consts[rnd.nextInt(consts.length)];
+    }
+
+    private Object generateArray(Class<?> clazz, AnnotatedType annotated, RandomGenerator rnd) throws InstantiationException, IllegalAccessException, InvocationTargetException {
+        Generatable ann = Optional.ofNullable(annotated)
+            .map(a -> a.getAnnotation(Generatable.class))
+            .orElse(null);
+        int minLength = ann != null ? ann.minLength() : Constants.MIN_LENGTH;
+        int maxLength = ann != null ? ann.maxLength() : Constants.DEFAULT_LENGTH_BOUND;
+        if (minLength > maxLength) {
+            throw new IllegalArgumentException("min > max for length for " + clazz);
+        }
+        var length = (int) Math.min(Math.max(rnd.nextExponential() * (maxLength - minLength) * 0.1, minLength), maxLength);
+
+        var componentClass = clazz.getComponentType();
+        var componentType = annotated instanceof AnnotatedArrayType a ? a.getAnnotatedGenericComponentType() : null;
+
+        Object array = Array.newInstance(componentClass, length);
+        for (int i = 0; i < length; ++i) {
+            Array.set(array, i, generate(componentClass, componentType, rnd));
+        }
+        return array;
     }
 
     // Спасибо разрабам Java за то, что у RandomGenerator.nextLong(origin, bound) правая граница невключительная, так что можно попасть на переполнение с MAX_VALUE + 1
