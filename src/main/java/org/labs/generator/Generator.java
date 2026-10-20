@@ -16,6 +16,7 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -76,7 +77,7 @@ public class Generator {
         } else if (List.class.isAssignableFrom(clazz)) {
             return generateList(clazz, annotatedType, ann, rnd);
         } else if (Map.class.isAssignableFrom(clazz)) {
-            // TODO
+            return generateMap(clazz, annotatedType, ann, rnd);
         } else if (clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers())) {
             // TODO
         } else if (clazz.getDeclaredConstructors().length != 0) {
@@ -188,6 +189,35 @@ public class Generator {
         }
 
         return list;
+    }
+
+    private Object generateMap(Class<?> clazz, AnnotatedType annotated, Generatable ann, RandomGenerator rnd) throws InstantiationException, IllegalAccessException, InvocationTargetException {
+        AnnotatedType keyType, valType; 
+        if (annotated instanceof AnnotatedParameterizedType apt) {
+            keyType = apt.getAnnotatedActualTypeArguments()[0];
+            keyType = keyType instanceof AnnotatedWildcardType ? OBJECT_TYPE : keyType;
+            valType = apt.getAnnotatedActualTypeArguments()[1];
+            valType = valType instanceof AnnotatedWildcardType ? OBJECT_TYPE : valType;
+        } else {
+            keyType = OBJECT_TYPE;
+            valType = OBJECT_TYPE;
+        }
+        
+        Map<Object, Object> map;
+        try {
+            map = (Map<Object, Object>) clazz.getDeclaredConstructor().newInstance();
+        } catch (NoSuchMethodException _) {
+            map = new HashMap<>();
+        }
+        
+        var length = getLength(ann, rnd);
+        for (int i = 0; i < length; ++i) {
+            var key = generate(toClass(keyType.getType()), keyType, rnd); 
+            var val = generate(toClass(valType.getType()), valType, rnd); 
+            map.put(key, val);
+        }
+
+        return map;
     }
 
     private static int getLength(Generatable ann, RandomGenerator rnd) {
