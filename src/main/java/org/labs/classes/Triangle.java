@@ -1,4 +1,4 @@
-package org.example.classes;
+package org.labs.classes;
 
 public class Triangle implements Shape {
     private double sideA;

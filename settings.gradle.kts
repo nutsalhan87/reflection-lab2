@@ -1,1 +1,1 @@
-rootProject.name = "reflection-template"
+rootProject.name = "reflection-lab2"
