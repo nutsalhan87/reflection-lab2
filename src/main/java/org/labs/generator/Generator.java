@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.random.RandomGenerator;
+import java.util.stream.IntStream;
 
 public class Generator {
 
@@ -81,7 +82,7 @@ public class Generator {
         } else if (clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers())) {
             // TODO
         } else if (clazz.getDeclaredConstructors().length != 0) {
-            // TODO            
+            return generateClass(clazz, annotatedType, rnd);
         } else {
             throw new IllegalArgumentException("Unsupported class " + clazz);
         }
@@ -166,6 +167,7 @@ public class Generator {
         return array;
     }
 
+    @SuppressWarnings("unchecked")
     private Object generateList(Class<?> clazz, AnnotatedType annotated, Generatable ann, RandomGenerator rnd) throws InstantiationException, IllegalAccessException, InvocationTargetException {
         AnnotatedType genericType = switch(annotated) {
             case AnnotatedParameterizedType apt -> {
@@ -191,6 +193,7 @@ public class Generator {
         return list;
     }
 
+    @SuppressWarnings("unchecked")
     private Object generateMap(Class<?> clazz, AnnotatedType annotated, Generatable ann, RandomGenerator rnd) throws InstantiationException, IllegalAccessException, InvocationTargetException {
         AnnotatedType keyType, valType; 
         if (annotated instanceof AnnotatedParameterizedType apt) {
@@ -218,6 +221,33 @@ public class Generator {
         }
 
         return map;
+    }
+
+    private Object generateClass(Class<?> clazz, AnnotatedType annotated, RandomGenerator rnd) throws InstantiationException, IllegalAccessException, InvocationTargetException {
+        var randomIndexes = IntStream.range(0, clazz.getDeclaredConstructors().length).toArray();
+        for (int i = randomIndexes.length - 1; i > 0; i--) {
+            int j = rnd.nextInt(i + 1);
+            int temp = randomIndexes[i];
+            randomIndexes[i] = randomIndexes[j];
+            randomIndexes[j] = temp;
+        }
+        
+        for (var i : randomIndexes) {
+            try {
+                var constructor = clazz.getDeclaredConstructors()[i];
+                constructor.setAccessible(true);
+                var classes = constructor.getParameterTypes();
+                var annotatedTypes = constructor.getAnnotatedParameterTypes();
+                assert classes.length == annotatedTypes.length;
+                var args = new Object[constructor.getParameterCount()];
+                for (int j = 0; j < constructor.getParameterCount(); ++j) {
+                    args[j] = generate(classes[j], annotatedTypes[j], rnd);
+                }
+                return constructor.newInstance(args);
+            } catch (Throwable t) {}
+        }
+
+        throw new InstantiationException("Can't create instance of class " + clazz + " using any declared constructor");
     }
 
     private static int getLength(Generatable ann, RandomGenerator rnd) {

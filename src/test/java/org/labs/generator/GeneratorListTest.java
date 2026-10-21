@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 class GeneratorListTest {
 
@@ -28,7 +27,7 @@ class GeneratorListTest {
         List<?> actual = assertInstanceOf(List.class, generator.generateValueOfType(List.class, rnd));
 
         assertEquals(1, actual.size());
-        assertNull(actual.getFirst());
+        assertEquals(Object.class, actual.getFirst().getClass());
         assertEquals(1, rnd.exponentialCalls);
     }
 

@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GeneratorMapTest {
@@ -32,8 +31,9 @@ class GeneratorMapTest {
 
         assertEquals(HashMap.class, actual.getClass());
         assertEquals(1, actual.size());
-        assertTrue(actual.containsKey(null));
-        assertNull(actual.get(null));
+        var entry = actual.entrySet().iterator().next();
+        assertEquals(Object.class, entry.getKey().getClass());
+        assertEquals(Object.class, entry.getValue().getClass());
         assertEquals(1, rnd.exponentialCalls);
     }
 
@@ -54,9 +54,9 @@ class GeneratorMapTest {
         Map<?, ?> actual = assertInstanceOf(Map.class, generator.generateValueOfType(field, rnd));
 
         assertEquals(HashMap.class, actual.getClass());
-        assertEquals(1, actual.size());
-        assertTrue(actual.containsKey(null));
-        assertNull(actual.get(null));
+        assertEquals(3, actual.size());
+        assertTrue(actual.entrySet().stream().allMatch(e ->
+            e.getKey().getClass() == Object.class && e.getValue().getClass() == Object.class));
         assertEquals(1, rnd.exponentialCalls);
     }
 
@@ -68,9 +68,9 @@ class GeneratorMapTest {
         Map<?, ?> actual = assertInstanceOf(Map.class, generator.generateValueOfType(field, rnd));
 
         assertEquals(HashMap.class, actual.getClass());
-        assertEquals(1, actual.size());
-        assertTrue(actual.containsKey(null));
-        assertNull(actual.get(null));
+        assertEquals(3, actual.size());
+        assertTrue(actual.entrySet().stream().allMatch(e ->
+            e.getKey().getClass() == Object.class && e.getValue().getClass() == Object.class));
         assertEquals(1, rnd.exponentialCalls);
     }
 
