@@ -54,7 +54,7 @@ class GeneratorPrimitiveTest {
     @ValueSource(classes = {float.class, Float.class})
     void generatesFloatsWithinConfiguredBounds(Class<?> type) throws Exception {
         float min = Constants.MIN;
-        float bound = Constants.MAX + 1.0f;
+        float bound = Constants.MAX;
         for (float expected : new float[] {min, 0.0f, Math.nextDown(bound)}) {
             RandomGenerator rnd = new StubRandom() {
                 @Override
@@ -76,7 +76,7 @@ class GeneratorPrimitiveTest {
     @ValueSource(classes = {double.class, Double.class})
     void generatesDoublesWithinConfiguredBounds(Class<?> type) throws Exception {
         double min = Constants.MIN;
-        double bound = Constants.MAX + 1.0d;
+        double bound = Constants.MAX;
         for (double expected : new double[] {min, 0.0d, Math.nextDown(bound)}) {
             RandomGenerator rnd = new StubRandom() {
                 @Override

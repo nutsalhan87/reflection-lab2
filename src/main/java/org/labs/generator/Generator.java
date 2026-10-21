@@ -16,6 +16,7 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +25,9 @@ import java.util.Random;
 import java.util.Set;
 import java.util.random.RandomGenerator;
 import java.util.stream.IntStream;
+
+import org.reflections.Reflections;
+import static org.reflections.scanners.Scanners.SubTypes;
 
 public class Generator {
 
@@ -48,6 +52,8 @@ public class Generator {
 
     private static final AnnotatedType OBJECT_TYPE =
         ObjectHolder.class.getRecordComponents()[0].getAnnotatedType();
+
+    private static final Reflections REFLECTIONS = new Reflections("org.labs");
 
     public Object generateValueOfType(AnnotatedElement element) throws InstantiationException, IllegalAccessException, InvocationTargetException {
         return generateValueOfType(element, new Random());
@@ -80,13 +86,11 @@ public class Generator {
         } else if (Map.class.isAssignableFrom(clazz)) {
             return generateMap(clazz, annotatedType, ann, rnd);
         } else if (clazz.isInterface() || Modifier.isAbstract(clazz.getModifiers())) {
-            // TODO
+            return generateInterfaceOrAbstract(clazz, annotatedType, rnd);
         } else if (clazz.getDeclaredConstructors().length != 0) {
             return generateClass(clazz, annotatedType, rnd);
-        } else {
-            throw new IllegalArgumentException("Unsupported class " + clazz);
         }
-        return null; // unreachable
+        throw new IllegalArgumentException("Unsupported class " + clazz);
     }
 
     private Object generatePrimitive(Class<?> clazz, Generatable ann, RandomGenerator rnd) {
@@ -120,10 +124,10 @@ public class Generator {
         } while(false);
         
         if (clazz == float.class || clazz == Float.class) {
-            return Float.valueOf(rnd.nextFloat((float) min, (float) max + 1.0f));
+            return Float.valueOf(rnd.nextFloat((float) min, (float) max));
         }
         if (clazz == double.class || clazz == Double.class) {
-            return Double.valueOf(rnd.nextDouble((double) min, (double) max + 1.0d));
+            return Double.valueOf(rnd.nextDouble((double) min, (double) max));
         }
 
         if (clazz == boolean.class || clazz == Boolean.class) {
@@ -248,6 +252,27 @@ public class Generator {
         }
 
         throw new InstantiationException("Can't create instance of class " + clazz + " using any declared constructor");
+    }
+
+    private Object generateInterfaceOrAbstract(Class<?> clazz, AnnotatedType annotated, RandomGenerator rnd) throws InstantiationException, IllegalAccessException, InvocationTargetException {
+        var childrenAndImplementors = REFLECTIONS.get(SubTypes.get(clazz).asClass());
+        if (childrenAndImplementors.isEmpty()) {
+            if (clazz.isInterface()) {
+                throw new InstantiationException("Can't create instance of interface " + clazz + ": no implementors found in current package");
+            } else {
+                throw new InstantiationException("Can't create instance of abstract class " + clazz + ": no children found in current package");
+            }
+        }
+
+        var shuffled = new ArrayList<>(childrenAndImplementors);
+        Collections.shuffle(shuffled, rnd);
+        for (var childOrImplementor : shuffled) {
+            try {
+                return generate(childOrImplementor, annotated, rnd);
+            } catch (Throwable t) {}
+        }
+        
+        throw new InstantiationException("Can't create instance of " + clazz + ": no appropriate child or implementor found");
     }
 
     private static int getLength(Generatable ann, RandomGenerator rnd) {
